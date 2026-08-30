@@ -5,7 +5,7 @@
 ## 1. Deterministic BI Engine vs. LLM Arithmetic
 **Decision**: Prevent the LLM from performing financial and aggregation arithmetic.
 **Rationale**: LLMs inherently suffer from mathematical hallucinations, particularly when processing high-cardinality financial datasets (e.g., pipeline sums). 
-**Implementation**: Gemini is restricted strictly to semantic orchestration (parsing intent to JSON) and executive summarization (translating JSON metrics to English). All aggregations (sums, counts, groupings) are deterministically executed in Python via `pandas` against normalized dataframes.
+**Implementation**: Gemini is restricted strictly to semantic orchestration (parsing intent to JSON) and response summarization (translating JSON metrics to English). All aggregations (sums, counts, groupings) are deterministically executed in Python via `pandas` against normalized dataframes.
 
 ## 2. Monday.com GraphQL API vs. MCP Integration
 **Decision**: Direct GraphQL API integration was chosen over a heavier Model Context Protocol (MCP) abstraction.
@@ -25,7 +25,7 @@
 
 ## 6. Data Quality Transparency
 **Decision**: Expose dataset malformations directly to the end user.
-**Rationale**: In the Deals board, 184/349 records lack a financial value. Instead of silently ignoring these or imputing fake averages, the BI engine detects `NaN`/`Unknown` values and injects explicit warnings (e.g., "Pipeline totals exclude 184 deals with missing values") into the LLM context, forcing the executive summary to communicate the data caveat.
+**Rationale**: In the Deals board, 184/349 records lack a financial value. Instead of silently ignoring these or imputing fake averages, the BI engine detects `NaN`/`Unknown` values and injects explicit warnings (e.g., "Pipeline totals exclude 184 deals with missing values") into the LLM context, forcing the final summary to communicate the data caveat.
 
 ## 7. Ambiguity & Fallback Handling
 **Decision**: Gracefully handle ambiguous intent or unsupported operations.

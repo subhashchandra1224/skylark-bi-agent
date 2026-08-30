@@ -1,34 +1,34 @@
 # Skylark Drones — Monday.com Business Intelligence Agent
 
-A founder-facing conversational BI agent that dynamically queries Monday.com Deals and Work Orders boards, normalizes messy business data, calculates deterministic BI metrics, and uses Gemini to generate executive-friendly insights.
+A conversational Business Intelligence (BI) agent that dynamically queries Monday.com Deals and Work Orders boards, normalizes unstructured business data, calculates deterministic BI metrics, and uses Gemini to generate actionable insights. This project was developed as a comprehensive technical implementation for the Skylark Drones assignment.
 
 ## Live Demo
 
 Frontend:
-<ADD_VERCEL_URL_AFTER_DEPLOYMENT>
+[https://frontend-ten-sepia-evh69p154q.vercel.app](https://frontend-ten-sepia-evh69p154q.vercel.app)
 
 Backend Health:
-<ADD_RENDER_URL_AFTER_DEPLOYMENT>/health
+[https://skylark-bi-agent-uis3.onrender.com/health](https://skylark-bi-agent-uis3.onrender.com/health)
 
 GitHub:
-<repository URL if available>
+[https://github.com/subhashchandra1224/skylark-bi-agent](https://github.com/subhashchandra1224/skylark-bi-agent)
 
 ## Problem Statement
 
-Founders and executive teams need quick, accurate answers from business data distributed across diverse operational platforms like Deals and Work Orders boards. Traditional dashboards are static, and extracting insights manually is slow.
+Business analysts and project managers need quick, accurate answers from operational data distributed across diverse platforms like Deals and Work Orders boards. Traditional dashboards are static, and extracting cross-board insights manually is slow.
 
 Key challenges include:
 - Inconsistent data formatting and data entry
 - Missing fields and missing financial values
 - Different date formats across boards
 - Difficulties in cross-board reasoning and operational analysis
-- The inability to ask founder-level natural-language questions and get immediate, deterministic answers.
+- The inability to ask natural-language questions and get immediate, deterministic answers.
 
 ## Architecture
 
 ```mermaid
 graph TD
-    A[Founder Question] --> B[React Conversational UI]
+    A[User Query] --> B[React Conversational UI]
     B --> C[FastAPI Backend]
     C --> D[Gemini Intent Parsing]
     D --> E[Structured Query Plan]
@@ -36,8 +36,8 @@ graph TD
     F --> G[Normalization Layer]
     G --> H[Pandas Deterministic BI Engine]
     H --> I[Data Quality Analysis]
-    I --> J[Gemini Executive Interpretation]
-    J --> K[Executive Response + KPIs + Caveats]
+    I --> J[Gemini Insight Interpretation]
+    J --> K[Formatted Response + KPIs + Caveats]
 ```
 
 ## Tech Stack
@@ -70,7 +70,7 @@ graph TD
 - Strict GraphQL pagination to ensure data completeness
 - 5-minute TTL caching for high performance and rate-limit safety
 - Deterministic Pandas calculations for absolute mathematical accuracy
-- Gemini natural-language understanding and executive summaries
+- Gemini natural-language understanding and response generation
 - Robust data normalization
 - Transparent data-quality warnings and caveats
 - Semantic date filtering (e.g., "this quarter", "soon")
@@ -83,7 +83,7 @@ graph TD
 
 **Gemini is NOT trusted to calculate authoritative business metrics.**
 
-Business metrics are deterministically calculated from live Monday.com data using Pandas. The LLM is used strictly for natural-language interpretation (converting the question into a JSON query plan) and executive narrative generation (converting the calculated KPIs into a readable summary).
+Business metrics are deterministically calculated from live Monday.com data using Pandas. The LLM is used strictly for natural-language interpretation (converting the question into a JSON query plan) and narrative generation (converting the calculated KPIs into a readable summary).
 
 Python/Pandas calculates counts, pipeline totals, status distributions, date filtering, and operational metrics.
 
@@ -120,9 +120,9 @@ Deals and Work Orders can be analyzed together where a defensible relationship e
 
 ## Leadership Update
 
-The Leadership Update feature provides a comprehensive executive summary across all integrated boards. It summarizes relevant pipeline health, sales status, operational execution, risks, upcoming activity, and highlights critical data-quality caveats using both boards simultaneously.
+The Leadership Update feature provides a comprehensive summary across all integrated boards. It summarizes relevant pipeline health, sales status, operational execution, risks, upcoming activity, and highlights critical data-quality caveats using both boards simultaneously.
 
-## Example Founder Questions
+## Example User Queries
 
 - How many deals do we have?
 - How many deals are open?
@@ -212,7 +212,7 @@ npm run dev
 - **Framework**: `Vite`
 - **Build**: `npm run build`
 - **Output**: `dist`
-- **Environment variable**: `VITE_API_URL=<Render backend URL>`
+- **Environment variable**: `VITE_API_URL=https://skylark-bi-agent-uis3.onrender.com`
 
 ## Limitations
 
