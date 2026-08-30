@@ -9,7 +9,7 @@ load_dotenv()
 app = FastAPI(title="Skylark BI Agent API")
 
 # Configure CORS for frontend
-frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 allow_origins = [frontend_url] if frontend_url != "*" else ["*"]
 
 app.add_middleware(
