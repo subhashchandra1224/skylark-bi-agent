@@ -106,13 +106,13 @@ The Normalization Layer is built to handle messy real-world data gracefully, inc
 **Date Normalization:**
 Monday may return date values containing timezone text such as a trailing parenthesized timezone description (e.g., `(Coordinated Universal Time)`). The normalization layer standardizes these values, stripping the invalid strings before Pandas date conversion, preventing systemic `NaT` failures.
 
-## Data Quality
+## Data Quality & Assumptions
 
-Incomplete records are not fabricated. The system:
-- Uses all available valid records
-- Excludes unusable values from applicable calculations
-- Reports relevant caveats (e.g., "Totals exclude 184 deals missing values")
-- Avoids silently replacing missing values with false assumptions
+Incomplete records are not fabricated. The system makes the following assumptions and quality enforcements:
+- The GraphQL metadata perfectly reflects the current board schema (dynamic discovery).
+- Empty or missing financial values imply zero for aggregate sums, but are explicitly excluded from count-based averages.
+- Ambiguous date strings are stripped of their parenthetical timezone anomalies to default to UTC before Pandas calculation.
+- It is assumed that unrelated deals and work orders should not be arbitrarily joined without a semantic relationship.
 
 ## Cross-Board Analytics
 
@@ -214,12 +214,24 @@ npm run dev
 - **Output**: `dist`
 - **Environment variable**: `VITE_API_URL=https://skylark-bi-agent-uis3.onrender.com`
 
-## Limitations
+## Challenges Faced
 
-1. **Stateless conversational memory**: Questions operate primarily as independent requests and persistent multi-session conversational memory is not implemented.
-2. **Gemini SDK maintenance**: The project currently uses `google.generativeai` which produces a deprecation warning; migration to `google.genai` is a future maintenance improvement.
-3. **Data quality**: Business insights depend on the completeness of Monday.com records.
-4. **Cross-board relationships**: Matching is performed only where relationships can be established defensibly.
+During development, several critical engineering challenges were encountered:
+1. **Mathematical Hallucinations**: Initial iterations allowed the LLM to aggregate pipeline values, leading to wildly inconsistent arithmetic (e.g., hallucinated millions). This was solved by restricting Gemini to semantic intent routing and strictly using Pandas for deterministic math.
+2. **GraphQL Schema Volatility**: Monday.com columns use abstract IDs (`numbers5`, `date4`) rather than readable titles. This was solved by implementing a dynamic GraphQL discovery query at runtime to map readable titles to internal IDs.
+3. **Dirty Date Formats**: Monday API date fields returned unparseable strings containing literal text like `(Coordinated Universal Time)`. A robust Python normalization layer using regex/stripping was built to sanitize these into valid `pd.Timestamp` objects.
+
+## Trade-offs
+
+1. **Direct API vs. MCP**: A direct GraphQL API integration was chosen over a heavier Model Context Protocol (MCP) abstraction. This traded the theoretical flexibility of MCP for tight optimization, strict pagination control, and deterministic error handling.
+2. **Stateless vs. Stateful**: The agent is currently stateless. We traded persistent conversational memory (which requires Redis/Postgres) for a vastly simpler, faster, and cheaper deployment footprint.
+
+## Potential Improvements
+
+1. **Session Memory**: Implementing Redis-based session storage to support persistent multi-turn conversational memory.
+2. **SDK Migration**: The project currently uses `google.generativeai` which produces a deprecation warning; migration to the new `google.genai` SDK is a future maintenance improvement.
+3. **Automated Monday Webhooks**: Transitioning from a pull-based caching model (5-minute TTL) to a push-based webhook model where Monday.com pushes updates to invalidate the cache instantly.
+
 
 ## AI Tools Used
 
