@@ -1,10 +1,11 @@
 import pandas as pd
 from typing import Dict, Any
+import re
 from app.services.normalization_service import parse_currency, normalize_probability, normalize_status
 
 class AnalyticsService:
     @staticmethod
-    def calculate_deals_metrics(df: pd.DataFrame, filters: Dict = None) -> Dict[str, Any]:
+    def calculate_deals_metrics(df: pd.DataFrame, filters: Dict = None, user_query: str = "") -> Dict[str, Any]:
         if df.empty:
             return {"total_pipeline": 0, "open_deals": 0, "weighted_pipeline": 0, "won_value": 0}
             
@@ -24,26 +25,36 @@ class AnalyticsService:
         else:
             df['status_norm'] = "unknown"
             
+        # Determine semantic date column for Deals
+        user_query_lower = user_query.lower()
+        if re.search(r'\b(historical|won|actual closure|closed)\b', user_query_lower):
+            target_date_col = 'close date (a)'
+        else:
+            # Default to pipeline/expected
+            target_date_col = 'tentative close date'
+
         # Apply filters
         if filters:
             if filters.get("status"):
                 statuses = [s.lower() for s in filters["status"]]
                 df = df[df['status_norm'].isin(statuses)]
             
-            if filters.get("date_range") and 'date' in df.columns:
-                try:
-                    from app.services.normalization_service import parse_date
-                    df['parsed_date'] = df['date'].apply(parse_date)
-                    now = pd.Timestamp.now()
-                    dr_type = filters["date_range"].get("type", "")
-                    if dr_type == "current_quarter":
-                        q_start = pd.Timestamp(now.year, (now.quarter - 1) * 3 + 1, 1)
-                        df = df[df['parsed_date'] >= q_start]
-                    elif dr_type == "current_month":
-                        m_start = pd.Timestamp(now.year, now.month, 1)
-                        df = df[df['parsed_date'] >= m_start]
-                except Exception:
-                    pass # Fail open if dates are unparseable
+            if filters.get("date_range"):
+                # Use semantic date column if it exists in df
+                if target_date_col in df.columns:
+                    try:
+                        from app.services.normalization_service import parse_date
+                        df['parsed_date'] = df[target_date_col].apply(parse_date)
+                        now = pd.Timestamp.now()
+                        dr_type = filters["date_range"].get("type", "")
+                        if dr_type == "current_quarter":
+                            q_start = pd.Timestamp(now.year, (now.quarter - 1) * 3 + 1, 1)
+                            df = df[df['parsed_date'] >= q_start]
+                        elif dr_type == "current_month":
+                            m_start = pd.Timestamp(now.year, now.month, 1)
+                            df = df[df['parsed_date'] >= m_start]
+                    except Exception:
+                        pass # Fail open if dates are unparseable
 
         open_df = df[df['status_norm'] == 'open']
         won_df = df[df['status_norm'] == 'won']
@@ -62,21 +73,72 @@ class AnalyticsService:
         }
 
     @staticmethod
-    def calculate_work_orders_metrics(df: pd.DataFrame, filters: Dict = None) -> Dict[str, Any]:
+    def calculate_work_orders_metrics(df: pd.DataFrame, filters: Dict = None, user_query: str = "") -> Dict[str, Any]:
         if df.empty:
-            return {"total_work_orders": 0, "ongoing": 0, "completed": 0}
+            return {
+                "total_work_orders": 0, 
+                "ongoing": 0, 
+                "completed": 0, 
+                "partially_completed": 0,
+                "paused_or_stuck": 0,
+                "not_started": 0,
+                "pending_client_details": 0,
+                "active_or_incomplete_projects": 0
+            }
             
         if 'execution status' in df.columns:
             df['status_norm'] = df['execution status'].apply(normalize_status).str.lower()
         else:
             df['status_norm'] = "unknown"
 
-        ongoing = df[df['status_norm'].str.contains('ongoing|partial|pause', case=False, na=False)]
-        completed = df[df['status_norm'].str.contains('completed|executed', case=False, na=False)]
+        # Determine semantic date column for Work Orders
+        user_query_lower = user_query.lower()
+        if re.search(r'\b(end|ending|finish|complete)\b', user_query_lower):
+            target_date_col = 'probable end date'
+        elif re.search(r'\b(delivery|deliver)\b', user_query_lower):
+            target_date_col = 'data delivery date'
+        elif re.search(r'\b(po|loi|order)\b', user_query_lower):
+            target_date_col = 'date of po/loi'
+        else:
+            # Default for "starting soon" or generic pipeline questions
+            target_date_col = 'probable start date'
+
+        if filters and filters.get("date_range"):
+            if target_date_col in df.columns:
+                try:
+                    from app.services.normalization_service import parse_date
+                    df['parsed_date'] = df[target_date_col].apply(parse_date)
+                    now = pd.Timestamp.now()
+                    dr_type = filters["date_range"].get("type", "")
+                    if dr_type == "current_quarter":
+                        q_start = pd.Timestamp(now.year, (now.quarter - 1) * 3 + 1, 1)
+                        df = df[df['parsed_date'] >= q_start]
+                    elif dr_type == "current_month":
+                        m_start = pd.Timestamp(now.year, now.month, 1)
+                        df = df[df['parsed_date'] >= m_start]
+                except Exception:
+                    pass
+
+        # Granular Work Order Status Semantics
+        # We look for exact word matches or substrings that semantically match the user's intent
+        ongoing = df[df['status_norm'] == 'ongoing']
+        completed = df[df['status_norm'].isin(['completed', 'executed'])]
+        partially_completed = df[df['status_norm'] == 'partially completed']
+        paused_or_stuck = df[df['status_norm'].isin(['pause', 'stuck'])]
+        not_started = df[df['status_norm'] == 'not started']
+        pending_client_details = df[df['status_norm'] == 'pending client details']
+
+        # Broad aggregate for anything that is actively being worked on or waiting to be finished
+        active_or_incomplete = df[~df['status_norm'].isin(['completed', 'executed', 'unknown'])]
         
         return {
             "total_work_orders": len(df),
-            "ongoing_projects": len(ongoing),
-            "completed_projects": len(completed),
+            "ongoing": len(ongoing),
+            "completed": len(completed),
+            "partially_completed": len(partially_completed),
+            "paused_or_stuck": len(paused_or_stuck),
+            "not_started": len(not_started),
+            "pending_client_details": len(pending_client_details),
+            "active_or_incomplete_projects": len(active_or_incomplete),
             "status_distribution": df['status_norm'].value_counts().to_dict() if 'status_norm' in df.columns else {}
         }

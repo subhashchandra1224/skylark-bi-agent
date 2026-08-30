@@ -69,7 +69,7 @@ graph TD
 - Dynamic column discovery via GraphQL
 - Strict GraphQL pagination to ensure data completeness
 - 5-minute TTL caching for high performance and rate-limit safety
-- Deterministic Pandas calculations for absolute mathematical accuracy
+- Deterministic Pandas calculations for reliable and reproducible deterministic business metrics calculated from live Monday.com data.
 - Gemini natural-language understanding and response generation
 - Robust data normalization
 - Transparent data-quality warnings and caveats

@@ -1,0 +1,79 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Architecture & Engineering Decision Log</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            max-width: 850px;
+            margin: 40px auto;
+            padding: 40px;
+            line-height: 1.6;
+            color: #24292e;
+            background-color: #fff;
+        }
+        h1 {
+            border-bottom: 1px solid #eaecef;
+            padding-bottom: 0.3em;
+            margin-top: 0;
+        }
+        h2 {
+            border-bottom: 1px solid #eaecef;
+            padding-bottom: 0.3em;
+            margin-top: 24px;
+        }
+        code {
+            background-color: rgba(27,31,35,0.05);
+            border-radius: 3px;
+            font-size: 85%;
+            margin: 0;
+            padding: 0.2em 0.4em;
+            font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+        }
+        p, li {
+            font-size: 16px;
+        }
+        strong {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <h1>Architecture &amp; Engineering Decision Log</h1>
+<p><strong>Project</strong>: Skylark BI Agent
+<strong>Goal</strong>: Design a deterministic, real-time Business Intelligence conversational interface over live Monday.com operational data.</p>
+<h2>1. Deterministic BI Engine vs. LLM Arithmetic</h2>
+<p><strong>Decision</strong>: Prevent the LLM from performing financial and aggregation arithmetic.
+<strong>Rationale</strong>: LLMs inherently suffer from mathematical hallucinations, particularly when processing high-cardinality financial datasets (e.g., pipeline sums). 
+<strong>Implementation</strong>: Gemini is restricted strictly to semantic orchestration (parsing intent to JSON) and executive summarization (translating JSON metrics to English). All aggregations (sums, counts, groupings) are deterministically executed in Python via <code>pandas</code> against normalized dataframes.</p>
+<h2>2. Monday.com GraphQL API vs. MCP Integration</h2>
+<p><strong>Decision</strong>: Direct GraphQL API integration was chosen over a heavier Model Context Protocol (MCP) abstraction.
+<strong>Rationale</strong>: Monday.com's dataset structure (dynamic column IDs vs text titles) requires highly specialized normalization that MCP does not natively handle well. Direct API calls allow for tight optimization, strict pagination control, and in-memory caching.</p>
+<h2>3. Dynamic Column Discovery</h2>
+<p><strong>Decision</strong>: Resolve Monday columns by dynamic title rather than hardcoded IDs.
+<strong>Rationale</strong>: Monday.com internally references columns via random hashes (e.g., <code>text_mm6qaqcr</code>). If a board admin duplicates or recreates a column, the ID changes, breaking hardcoded integrations. The agent fetches board metadata to dynamically map normalized text titles (e.g., "probable start date") to their live IDs on every cache miss.</p>
+<h2>4. Normalization and Date Parsing Overrides</h2>
+<p><strong>Decision</strong>: Implement a custom text and date normalization service before Pandas injection.
+<strong>Rationale</strong>: Monday.com stores dates as text strings containing non-standard timezone notations (e.g., <code>(Coordinated Universal Time)</code>). Standard parsers (including <code>dateutil</code> and <code>pandas</code>) fail on this trailing text, resulting in widespread <code>NaT</code> errors and false "missing data" reports. The normalization layer robustly strips this text prior to timestamp casting.</p>
+<h2>5. In-Memory Caching (TTL)</h2>
+<p><strong>Decision</strong>: Utilize a 5-minute TTL cache via <code>cachetools</code> for Monday.com datasets.
+<strong>Rationale</strong>: A single conversational query like "Give me a leadership update" requires scanning multiple high-volume boards. Hitting the live GraphQL endpoint for every sequential message introduces massive latency and risks hitting API rate limits. 5 minutes ensures near-real-time visibility without overwhelming external systems.</p>
+<h2>6. Data Quality Transparency</h2>
+<p><strong>Decision</strong>: Expose dataset malformations directly to the end user.
+<strong>Rationale</strong>: In the Deals board, 184/349 records lack a financial value. Instead of silently ignoring these or imputing fake averages, the BI engine detects <code>NaN</code>/<code>Unknown</code> values and injects explicit warnings (e.g., "Pipeline totals exclude 184 deals with missing values") into the LLM context, forcing the executive summary to communicate the data caveat.</p>
+<h2>7. Ambiguity &amp; Fallback Handling</h2>
+<p><strong>Decision</strong>: Gracefully handle ambiguous intent or unsupported operations.
+<strong>Rationale</strong>: If a user asks "How are we doing?" without specifying a board, the LLM maps this to a <code>leadership_update</code> intent, automatically pulling cross-board KPIs. If a user asks for a non-existent company, the agent executes the filter, detects 0 rows in Pandas, and returns a factual statement rather than hallucinating records to please the user.</p>
+<h2>Limitations &amp; Future Work</h2>
+<ol>
+<li><strong>Stateless Conversational Memory</strong>: The current implementation operates as a one-shot orchestration per query. Context does not persist across requests. In production, injecting a lightweight Redis store to track <code>session_id</code> would enable true conversational memory.</li>
+<li><strong>Deprecation Handling</strong>: The <code>google.generativeai</code> SDK used for Gemini orchestration is slated for deprecation. A near-term migration to <code>google.genai</code> is strictly recommended before LTS production deployment.</li>
+</ol>
+    <script>
+        // Automatically open print dialog when opened
+        window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>

@@ -39,7 +39,7 @@ def handle_chat(request: ChatRequest):
             warnings.extend(deals_warnings)
             
             filter_dict = query_plan.filters.model_dump() if query_plan.filters else {}
-            deals_metrics = AnalyticsService.calculate_deals_metrics(df_deals, filter_dict)
+            deals_metrics = AnalyticsService.calculate_deals_metrics(df_deals, filter_dict, request.message)
             metrics.update(deals_metrics)
             sources.append("Deals")
             
@@ -51,7 +51,7 @@ def handle_chat(request: ChatRequest):
             warnings.extend(wo_warnings)
             
             filter_dict = query_plan.filters.model_dump() if query_plan.filters else {}
-            wo_metrics = AnalyticsService.calculate_work_orders_metrics(df_wo, filter_dict)
+            wo_metrics = AnalyticsService.calculate_work_orders_metrics(df_wo, filter_dict, request.message)
             metrics.update(wo_metrics)
             sources.append("Work Orders")
 
