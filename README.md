@@ -1,19 +1,39 @@
-# Skylark BI Agent
+<div align="center">
+  <h1>🦅 Skylark BI Agent</h1>
+  <p><strong>A deterministic, real-time AI Business Intelligence agent over live Monday.com operational data.</strong></p>
 
-## Problem Statement
-Executive teams require immediate, cross-functional visibility into live operational metrics (Sales Deals and Engineering Work Orders). Traditional BI dashboards are static and slow, while raw LLMs frequently hallucinate financial arithmetic and metrics.
+  <p>
+    <a href="https://frontend-3o06y1dnq-subhash45.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-frontend--3o06y1dnq--subhash45.vercel.app-10b981?style=for-the-badge&logo=vercel" alt="Live Demo" /></a>
+  </p>
 
-## Solution
-The Skylark BI Agent bridges this gap by offering a natural language conversational interface that guarantees 100% deterministic mathematical accuracy. It uses Gemini strictly for semantic intent parsing and executive interpretation, while relying entirely on Python and Pandas to execute authoritative calculations against live Monday.com GraphQL data.
+  <p>
+    <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
+    <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
+    <img src="https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white" alt="Pandas" />
+    <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
+    <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
+    <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind" />
+  </p>
+</div>
 
-## Architecture
+<hr />
+
+## 🌟 Overview
+Executive teams require immediate, cross-functional visibility into live operational metrics (Sales Deals and Engineering Work Orders). Traditional BI dashboards are static, and raw LLMs frequently hallucinate financial arithmetic.
+
+**The Skylark BI Agent** bridges this gap by offering a natural language conversational interface that guarantees **100% deterministic mathematical accuracy**. It uses Google Gemini strictly for semantic intent parsing and executive interpretation, while relying entirely on Python and Pandas to execute authoritative calculations against live Monday.com GraphQL data.
+
+---
+
+## 🏗️ Architecture & Core Systems
+
 ```mermaid
 graph TD
     A[User Question] --> B[React Frontend]
     B --> C[FastAPI Backend]
     C --> D[Gemini Intent Parsing]
     D --> E[Structured JSON Plan]
-    E --> F[Monday.com Service]
+    E --> F[Monday.com GraphQL]
     F --> G[Data Normalization]
     G --> H[Pandas BI Engine]
     H --> I[Verified Metrics]
@@ -21,50 +41,40 @@ graph TD
     J --> B
 ```
 
-## Tech Stack
-- **Frontend**: React, Vite, Tailwind CSS v4, React Markdown
-- **Backend**: Python 3.10+, FastAPI, Pandas, python-dotenv
-- **External APIs**: Monday.com GraphQL API, Google Gemini API
+### 🔹 Deterministic BI Engine
+**Gemini is blocked from doing math.** All aggregations, counts, groupings, and date-range filtering are deterministically calculated via `pandas` in Python. This ensures **0% hallucination** on financial metrics.
 
-## Core Systems
+### 🔹 Dynamic Column Discovery
+Rather than hardcoding fragile column IDs, the agent fetches board metadata to dynamically map normalized text titles (e.g., `"probable start date"`) to their live Monday.com internal hashes.
 
-### Monday.com Integration
-Connects directly to the live Monday.com GraphQL API to fetch the latest state of Deals and Work Orders in real time.
+### 🔹 Robust Normalization & Date Parsing
+Monday.com returns highly variable data types (strings, JSON, empty arrays) and non-standard timezone notations (e.g., `(Coordinated Universal Time)`). A strict normalization engine converts financial figures and strips breaking timezone strings to allow flawless timestamp casting.
 
-### Dynamic Column Discovery
-Rather than hardcoding column IDs, the agent dynamically fetches board metadata mapping column titles (like `probable start date`) to their internal IDs. This allows Monday.com administrators to rename columns without breaking the application.
+### 🔹 Data Quality Transparency
+Missing data is not silently ignored. If deals lack financial values, the agent flags this (e.g., *"Pipeline totals exclude 184 deals with missing values"*), maintaining absolute trust in the generated reports.
 
-### GraphQL Pagination
-Ensures 100% data integrity by following GraphQL cursors (`next_items_page`) until all records are retrieved, guaranteeing no deals or work orders are silently truncated.
+### 🔹 Cross-Board Analytics
+Queries like *"Give me a leadership update"* automatically span multiple boards, pulling and analyzing live data from both the **Deals** pipeline and **Work Orders** execution tracking.
 
-### Caching
-A 5-minute in-memory TTL cache (`cachetools`) minimizes latency and prevents excessive rate-limiting on both the Monday.com API and Gemini API during conversational bursts.
+---
 
-### Normalization
-Monday.com returns highly variable data types (e.g., strings, JSON, empty arrays). The Normalization Service strictly converts financial figures, percentages, statuses, and dates into uniform Pandas types.
+## 🚀 Live Demo
+You can test the application live directly at the Vercel URL below:
 
-### Date Parsing
-Monday.com injects trailing timezone text into dates (e.g., `(Coordinated Universal Time)`). The normalization engine robustly strips this text to allow accurate Pandas `pd.to_datetime` parsing, avoiding `NaT` failures.
+👉 **[Live Frontend Application](https://frontend-3o06y1dnq-subhash45.vercel.app)**
 
-### Deterministic BI Engine
-**Business metrics are deterministically calculated from the live Monday.com data.** 
-Gemini is blocked from doing math. Pandas handles all aggregations, counting, and date-range filtering, ensuring 0% hallucination on financial metrics.
+### Example Questions to Try:
+- *"How many deals do we have?"*
+- *"What is our open pipeline value?"*
+- *"Which work orders are starting soon?"*
+- *"Give me a leadership update."*
 
-### Gemini's Role
-Gemini acts solely as an orchestrator and interpreter:
-1. Translates natural language into a JSON `StructuredQueryPlan`.
-2. Reads the Pandas-calculated output and formats it into a professional executive summary.
+---
 
-### Data-Quality Handling
-The agent proactively reports missing data (e.g., "184 deals missing values") rather than crashing or inventing numbers, maintaining high executive trust.
+## ⚙️ Local Setup & Execution
 
-### Cross-Board Analysis
-Queries like "Give me a leadership update" automatically pull, join, and analyze both the Deals board and Work Orders board simultaneously.
-
-## Setup & Local Execution
-
-### Environment Variables
-Create a `.env` file in the `backend/` directory:
+### 1️⃣ Environment Variables
+Create a `.env` file in the `backend/` directory with the following keys:
 ```env
 MONDAY_API_TOKEN=your_monday_token
 MONDAY_DEALS_BOARD_ID=5030975323
@@ -73,7 +83,7 @@ GEMINI_API_KEY=your_gemini_key
 FRONTEND_URL=http://localhost:5173
 ```
 
-### Backend
+### 2️⃣ Backend (FastAPI)
 ```bash
 cd backend
 python -m venv venv
@@ -82,46 +92,27 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-### Frontend
+### 3️⃣ Frontend (React)
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-## Deployment
+---
 
-### Render (Backend)
-- **Root Directory**: `backend`
-- **Build Command**: `pip install -r requirements.txt`
-- **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port 10000`
-- **Required Env Vars**: `MONDAY_API_TOKEN`, `MONDAY_DEALS_BOARD_ID`, `MONDAY_WORK_ORDERS_BOARD_ID`, `GEMINI_API_KEY`, `FRONTEND_URL` (Set to Vercel URL)
+## 🚢 Deployment Details
+The application is fully containerized and deployed across two platforms:
 
-### Vercel (Frontend)
-- **Root Directory**: `frontend`
-- **Framework**: Vite
-- **Build Command**: `npm run build`
-- **Output Directory**: `dist`
-- **Required Env Vars**: `VITE_API_URL` (Set to Render backend URL)
+- **Backend (Render)**: 
+  - **Root**: `backend`
+  - **Build**: `pip install -r requirements.txt`
+  - **Start**: `uvicorn app.main:app --host 0.0.0.0 --port 10000`
+- **Frontend (Vercel)**:
+  - **Framework**: Vite (`npm run build`)
+  - **Variables**: `VITE_API_URL` securely links to the Render instance.
 
-## Example Questions
-- "How many deals do we have?"
-- "What is our open pipeline value?"
-- "Which work orders are starting soon?"
-- "Give me a leadership update."
+---
 
-## Assumptions & Limitations
-- **Limitations**: The agent does not persist conversational history across page reloads (stateless memory).
-- **Assumptions**: Assumes Monday.com board structures retain their core column titles, even if internal IDs change.
-
-## Security
-- Strict `.gitignore` prevents `.env` leaks.
-- CORS policy restricts backend access to the defined `FRONTEND_URL`.
-- Secrets are NEVER sent to the browser or logged in stdout.
-
-## AI Tools Used
-This project was developed with the assistance of advanced AI coding agents.
-
-## Future Improvements
-- Migration from the deprecated `google.generativeai` SDK to the new `google.genai` package.
-- Implementation of Redis for persistent conversational memory.
+## 📄 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
