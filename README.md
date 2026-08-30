@@ -1,118 +1,226 @@
-<div align="center">
-  <h1>🦅 Skylark BI Agent</h1>
-  <p><strong>A deterministic, real-time AI Business Intelligence agent over live Monday.com operational data.</strong></p>
+# Skylark Drones — Monday.com Business Intelligence Agent
 
-  <p>
-    <a href="https://frontend-ten-sepia-evh69p154q.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-frontend--ten--sepia--evh69p154q.vercel.app-10b981?style=for-the-badge&logo=vercel" alt="Live Demo" /></a>
-  </p>
+A founder-facing conversational BI agent that dynamically queries Monday.com Deals and Work Orders boards, normalizes messy business data, calculates deterministic BI metrics, and uses Gemini to generate executive-friendly insights.
 
-  <p>
-    <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
-    <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
-    <img src="https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white" alt="Pandas" />
-    <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
-    <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
-    <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind" />
-  </p>
-</div>
+## Live Demo
 
-<hr />
+Frontend:
+<ADD_VERCEL_URL_AFTER_DEPLOYMENT>
 
-## 🌟 Overview
-Executive teams require immediate, cross-functional visibility into live operational metrics (Sales Deals and Engineering Work Orders). Traditional BI dashboards are static, and raw LLMs frequently hallucinate financial arithmetic.
+Backend Health:
+<ADD_RENDER_URL_AFTER_DEPLOYMENT>/health
 
-**The Skylark BI Agent** bridges this gap by offering a natural language conversational interface that guarantees **100% deterministic mathematical accuracy**. It uses Google Gemini strictly for semantic intent parsing and executive interpretation, while relying entirely on Python and Pandas to execute authoritative calculations against live Monday.com GraphQL data.
+GitHub:
+<repository URL if available>
 
----
+## Problem Statement
 
-## 🏗️ Architecture & Core Systems
+Founders and executive teams need quick, accurate answers from business data distributed across diverse operational platforms like Deals and Work Orders boards. Traditional dashboards are static, and extracting insights manually is slow.
+
+Key challenges include:
+- Inconsistent data formatting and data entry
+- Missing fields and missing financial values
+- Different date formats across boards
+- Difficulties in cross-board reasoning and operational analysis
+- The inability to ask founder-level natural-language questions and get immediate, deterministic answers.
+
+## Architecture
 
 ```mermaid
 graph TD
-    A[User Question] --> B[React Frontend]
+    A[Founder Question] --> B[React Conversational UI]
     B --> C[FastAPI Backend]
     C --> D[Gemini Intent Parsing]
-    D --> E[Structured JSON Plan]
-    E --> F[Monday.com GraphQL]
-    F --> G[Data Normalization]
-    G --> H[Pandas BI Engine]
-    H --> I[Verified Metrics]
-    I --> J[Gemini Executive Summary]
-    J --> B
+    D --> E[Structured Query Plan]
+    E --> F[Monday.com GraphQL API]
+    F --> G[Normalization Layer]
+    G --> H[Pandas Deterministic BI Engine]
+    H --> I[Data Quality Analysis]
+    I --> J[Gemini Executive Interpretation]
+    J --> K[Executive Response + KPIs + Caveats]
 ```
 
-### 🔹 Deterministic BI Engine
-**Gemini is blocked from doing math.** All aggregations, counts, groupings, and date-range filtering are deterministically calculated via `pandas` in Python. This ensures **0% hallucination** on financial metrics.
+## Tech Stack
 
-### 🔹 Dynamic Column Discovery
-Rather than hardcoding fragile column IDs, the agent fetches board metadata to dynamically map normalized text titles (e.g., `"probable start date"`) to their live Monday.com internal hashes.
+**Frontend:**
+- React
+- Vite
+- Tailwind CSS
 
-### 🔹 Robust Normalization & Date Parsing
-Monday.com returns highly variable data types (strings, JSON, empty arrays) and non-standard timezone notations (e.g., `(Coordinated Universal Time)`). A strict normalization engine converts financial figures and strips breaking timezone strings to allow flawless timestamp casting.
+**Backend:**
+- Python
+- FastAPI
+- Pandas
 
-### 🔹 Data Quality Transparency
-Missing data is not silently ignored. If deals lack financial values, the agent flags this (e.g., *"Pipeline totals exclude 184 deals with missing values"*), maintaining absolute trust in the generated reports.
+**AI:**
+- Google Gemini
 
-### 🔹 Cross-Board Analytics
-Queries like *"Give me a leadership update"* automatically span multiple boards, pulling and analyzing live data from both the **Deals** pipeline and **Work Orders** execution tracking.
+**Integration:**
+- Monday.com GraphQL API
 
----
+**Deployment:**
+- Render
+- Vercel
 
-## 🚀 Live Demo
-You can test the application live directly at the Vercel URL below:
+## Key Features
 
-👉 **[Live Frontend Application](https://frontend-ten-sepia-evh69p154q.vercel.app)**
+- Conversational BI interface for natural language querying
+- Live Monday.com data integration
+- Dynamic column discovery via GraphQL
+- Strict GraphQL pagination to ensure data completeness
+- 5-minute TTL caching for high performance and rate-limit safety
+- Deterministic Pandas calculations for absolute mathematical accuracy
+- Gemini natural-language understanding and executive summaries
+- Robust data normalization
+- Transparent data-quality warnings and caveats
+- Semantic date filtering (e.g., "this quarter", "soon")
+- Cross-board analytics
+- Leadership updates spanning entire operations
+- Visual KPI cards and responsive UI
+- Graceful API and LLM error handling
 
-### Example Questions to Try:
-- *"How many deals do we have?"*
-- *"What is our open pipeline value?"*
-- *"Which work orders are starting soon?"*
-- *"Give me a leadership update."*
+## Important Design Decision
 
----
+**Gemini is NOT trusted to calculate authoritative business metrics.**
 
-## ⚙️ Local Setup & Execution
+Business metrics are deterministically calculated from live Monday.com data using Pandas. The LLM is used strictly for natural-language interpretation (converting the question into a JSON query plan) and executive narrative generation (converting the calculated KPIs into a readable summary).
 
-### 1️⃣ Environment Variables
-Create a `.env` file in the `backend/` directory with the following keys:
-```env
-MONDAY_API_TOKEN=your_monday_token
-MONDAY_DEALS_BOARD_ID=5030975323
-MONDAY_WORK_ORDERS_BOARD_ID=5030975433
-GEMINI_API_KEY=your_gemini_key
-FRONTEND_URL=http://localhost:5173
-```
+Python/Pandas calculates counts, pipeline totals, status distributions, date filtering, and operational metrics.
 
-### 2️⃣ Backend (FastAPI)
+## Monday.com Integration
+
+The agent integrates with Monday.com via the GraphQL API with strict read-only behavior. 
+
+It features dynamic column discovery, meaning it fetches board metadata to map normalized column titles to internal Monday IDs dynamically. Pagination is strictly enforced at runtime fetching to ensure all records are retrieved, and a 5-minute cache minimizes API load.
+
+**The application does not hardcode the supplied assignment dataset. Monday.com is the runtime source of truth.**
+
+## Data Resilience
+
+The Normalization Layer is built to handle messy real-world data gracefully, including:
+- Null fields and empty strings
+- Inconsistent text and statuses
+- Unparseable numeric/currency values (defaulting to zero rather than crashing)
+- Genuinely missing values
+
+**Date Normalization:**
+Monday may return date values containing timezone text such as a trailing parenthesized timezone description (e.g., `(Coordinated Universal Time)`). The normalization layer standardizes these values, stripping the invalid strings before Pandas date conversion, preventing systemic `NaT` failures.
+
+## Data Quality
+
+Incomplete records are not fabricated. The system:
+- Uses all available valid records
+- Excludes unusable values from applicable calculations
+- Reports relevant caveats (e.g., "Totals exclude 184 deals missing values")
+- Avoids silently replacing missing values with false assumptions
+
+## Cross-Board Analytics
+
+Deals and Work Orders can be analyzed together where a defensible relationship exists (e.g., generating high-level company overviews). Ambiguous relationships are not fabricated, and questions requiring arbitrary joins between unrelated deals and work orders are flagged or gracefully limited to high-level summarization.
+
+## Leadership Update
+
+The Leadership Update feature provides a comprehensive executive summary across all integrated boards. It summarizes relevant pipeline health, sales status, operational execution, risks, upcoming activity, and highlights critical data-quality caveats using both boards simultaneously.
+
+## Example Founder Questions
+
+- How many deals do we have?
+- How many deals are open?
+- What is our open pipeline value?
+- How are our deals distributed by stage?
+- Which deals are expected to close soon?
+- How are our work orders performing?
+- How many work orders are ongoing?
+- Which work orders are starting soon?
+- Which projects are expected to end soon?
+- What operational issues need attention?
+- How is our pipeline looking this quarter?
+- Give me a leadership update.
+
+## Local Setup
+
+### Backend
+
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
+
+# Create virtual environment
+python -m venv .venv
+
+# Activate (Windows)
+.venv\Scripts\activate
+
+# Activate (macOS/Linux)
+source .venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
-uvicorn app.main:app --reload
+
+# Copy environment variables
+cp .env.example .env
 ```
 
-### 3️⃣ Frontend (React)
+Fill the required private environment variables in `.env`.
+
+Start the backend:
+```bash
+uvicorn app.main:app --reload
+```
+The backend will be available at `http://localhost:8000`.
+
+### Frontend
+
 ```bash
 cd frontend
+
+# Install dependencies
 npm install
+
+# Copy environment variables
+cp .env.example .env
+```
+
+Configure `VITE_API_URL` to point to your local or remote backend.
+
+Start the frontend:
+```bash
 npm run dev
 ```
 
----
+## Environment Variables
 
-## 🚢 Deployment Details
-The application is fully containerized and deployed across two platforms:
+### Backend
+- `MONDAY_API_TOKEN`: Your private Monday.com API access token.
+- `MONDAY_DEALS_BOARD_ID`: The ID of the Deals board in Monday.com.
+- `MONDAY_WORK_ORDERS_BOARD_ID`: The ID of the Work Orders board in Monday.com.
+- `GEMINI_API_KEY`: Your Google Gemini API key.
+- `FRONTEND_URL`: The URL of the deployed frontend (used for CORS configuration).
 
-- **Backend (Render)**: 
-  - **Root**: `backend`
-  - **Build**: `pip install -r requirements.txt`
-  - **Start**: `uvicorn app.main:app --host 0.0.0.0 --port 10000`
-- **Frontend (Vercel)**:
-  - **Framework**: Vite (`npm run build`)
-  - **Variables**: `VITE_API_URL` securely links to the Render instance.
+### Frontend
+- `VITE_API_URL`: The URL of the FastAPI backend.
 
----
+## Deployment
 
-## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+**Render backend:**
+- **Root Directory**: `backend`
+- **Build**: `pip install -r requirements.txt`
+- **Start**: `uvicorn app.main:app --host 0.0.0.0 --port 10000`
+- **Environment variables**: `MONDAY_API_TOKEN`, `MONDAY_DEALS_BOARD_ID`, `MONDAY_WORK_ORDERS_BOARD_ID`, `GEMINI_API_KEY`, `FRONTEND_URL`
+
+**Vercel frontend:**
+- **Root Directory**: `frontend`
+- **Framework**: `Vite`
+- **Build**: `npm run build`
+- **Output**: `dist`
+- **Environment variable**: `VITE_API_URL=<Render backend URL>`
+
+## Limitations
+
+1. **Stateless conversational memory**: Questions operate primarily as independent requests and persistent multi-session conversational memory is not implemented.
+2. **Gemini SDK maintenance**: The project currently uses `google.generativeai` which produces a deprecation warning; migration to `google.genai` is a future maintenance improvement.
+3. **Data quality**: Business insights depend on the completeness of Monday.com records.
+4. **Cross-board relationships**: Matching is performed only where relationships can be established defensibly.
+
+## AI Tools Used
+
+AI tools were used for development assistance, debugging, architecture refinement, and documentation formatting during the creation of this project. AI is not used to replace deterministic business calculations at runtime.
