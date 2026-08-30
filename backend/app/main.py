@@ -10,7 +10,10 @@ app = FastAPI(title="Skylark BI Agent API")
 
 # Configure CORS for frontend
 frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
-allow_origins = [frontend_url] if frontend_url != "*" else ["*"]
+allow_origins = [
+    frontend_url, 
+    "https://frontend-ten-sepia-evh69p154q.vercel.app"
+] if frontend_url != "*" else ["*"]
 
 app.add_middleware(
     CORSMiddleware,
