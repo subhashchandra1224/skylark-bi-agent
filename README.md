@@ -3,7 +3,7 @@
   <p><strong>A deterministic, real-time AI Business Intelligence agent over live Monday.com operational data.</strong></p>
 
   <p>
-    <a href="https://frontend-3o06y1dnq-subhash45.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-frontend--3o06y1dnq--subhash45.vercel.app-10b981?style=for-the-badge&logo=vercel" alt="Live Demo" /></a>
+    <a href="https://frontend-ten-sepia-evh69p154q.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-frontend--ten--sepia--evh69p154q.vercel.app-10b981?style=for-the-badge&logo=vercel" alt="Live Demo" /></a>
   </p>
 
   <p>
@@ -61,7 +61,7 @@ Queries like *"Give me a leadership update"* automatically span multiple boards,
 ## 🚀 Live Demo
 You can test the application live directly at the Vercel URL below:
 
-👉 **[Live Frontend Application](https://frontend-3o06y1dnq-subhash45.vercel.app)**
+👉 **[Live Frontend Application](https://frontend-ten-sepia-evh69p154q.vercel.app)**
 
 ### Example Questions to Try:
 - *"How many deals do we have?"*
