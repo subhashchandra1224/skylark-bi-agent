@@ -21,32 +21,38 @@ def test_deals_date_filtering(mock_now):
     mock_now.return_value = pd.Timestamp('2023-11-15')
     
     df = pd.DataFrame([
-        # Deal 1: tentative close is Q4, close date (a) is Q3
-        {"deal status": "open", "tentative close date": "2023-11-01", "close date (a)": "2023-09-01"},
-        # Deal 2: tentative close is Q3, close date (a) is Q4
-        {"deal status": "won", "tentative close date": "2023-09-01", "close date (a)": "2023-11-01"}
+        # Deal 1: Q4 (current quarter), Current Month (Nov)
+        {"deal status": "open", "tentative close date": "2023-11-01", "close date (a)": "2023-11-05"},
+        # Deal 2: Q3 (last quarter), Last Month (Oct)
+        {"deal status": "won", "tentative close date": "2023-09-01", "close date (a)": "2023-09-15"},
+        # Deal 3: Q1 next year (future)
+        {"deal status": "open", "tentative close date": "2024-02-01", "close date (a)": "2024-02-01"},
     ])
     
-    filters = {"date_range": {"type": "current_quarter"}}
+    # 1. Test Current Quarter Boundary
+    filters_cq = {"date_range": {"type": "current_quarter"}}
+    metrics_cq = AnalyticsService.calculate_deals_metrics(df.copy(), filters_cq, user_query="expected to close")
+    assert metrics_cq["total_deals"] == 1 # Excludes past (Q3) and future (2024 Q1)
     
-    # 1. Pipeline query (uses tentative close date, which for Deal 1 is Q4, Deal 2 is Q3)
-    metrics_pipeline = AnalyticsService.calculate_deals_metrics(df.copy(), filters, user_query="expected to close")
-    assert metrics_pipeline["total_deals"] == 1 # Only Deal 1 is in Q4 for tentative
-    assert metrics_pipeline["open_deals"] == 1
+    # 2. Test Last Quarter Boundary
+    filters_lq = {"date_range": {"type": "last_quarter"}}
+    metrics_lq = AnalyticsService.calculate_deals_metrics(df.copy(), filters_lq, user_query="actual closure won")
+    assert metrics_lq["total_deals"] == 1 # Captures Q3, ignores Q4 and 2024
     
-    # 2. Historical/Won query (uses close date (a), which for Deal 1 is Q3, Deal 2 is Q4)
-    metrics_historical = AnalyticsService.calculate_deals_metrics(df.copy(), filters, user_query="actual closure won")
-    assert metrics_historical["total_deals"] == 1 # Only Deal 2 is in Q4 for close date (a)
-    assert metrics_historical["won_deals"] == 1
+    # 3. Test Upcoming Boundary (90 days forward from Nov 15)
+    filters_up = {"date_range": {"type": "upcoming"}}
+    metrics_up = AnalyticsService.calculate_deals_metrics(df.copy(), filters_up, user_query="expected to close")
+    assert metrics_up["total_deals"] == 1 # Captures Deal 3 (Feb), excludes Deal 1 (Nov 1 is past) and Deal 2
 
 def test_work_orders_status_buckets():
     df = pd.DataFrame([
         {"execution status": "ongoing"},
         {"execution status": "completed"},
-        {"execution status": "partially completed"},
-        {"execution status": "pause"},
+        {"execution status": "partial completed"},
+        {"execution status": "pause / struck"},
         {"execution status": "not started"},
-        {"execution status": "pending client details"}
+        {"execution status": "details pending from client"},
+        {"execution status": "executed until current month"}
     ])
     
     metrics = AnalyticsService.calculate_work_orders_metrics(df, user_query="status overview")
@@ -56,7 +62,8 @@ def test_work_orders_status_buckets():
     assert metrics["paused_or_stuck"] == 1
     assert metrics["not_started"] == 1
     assert metrics["pending_client_details"] == 1
-    assert metrics["active_or_incomplete_projects"] == 5 # everything except 'completed'
+    assert metrics["executed_until_current_month"] == 1
+    assert metrics["active_or_incomplete_projects"] == 6 # everything except 'completed'
 
 @patch('pandas.Timestamp.now')
 def test_work_orders_date_filtering(mock_now):

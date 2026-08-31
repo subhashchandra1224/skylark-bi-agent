@@ -110,7 +110,7 @@ Monday may return date values containing timezone text such as a trailing parent
 
 Incomplete records are not fabricated. The system makes the following assumptions and quality enforcements:
 - The GraphQL metadata perfectly reflects the current board schema (dynamic discovery).
-- Empty or missing financial values imply zero for aggregate sums, but are explicitly excluded from count-based averages.
+- Missing financial values are treated as zero for applicable aggregate calculations, while the number of missing values is surfaced as a data-quality caveat.
 - Ambiguous date strings are stripped of their parenthetical timezone anomalies to default to UTC before Pandas calculation.
 - It is assumed that unrelated deals and work orders should not be arbitrarily joined without a semantic relationship.
 
@@ -136,6 +136,8 @@ The Leadership Update feature provides a comprehensive summary across all integr
 - What operational issues need attention?
 - How is our pipeline looking this quarter?
 - Give me a leadership update.
+
+*Note: Queries regarding "soon" or "upcoming" dates are deterministically bounded to a window of today through the next 90 days.*
 
 ## Local Setup
 

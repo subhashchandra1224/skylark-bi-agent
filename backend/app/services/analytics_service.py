@@ -49,10 +49,20 @@ class AnalyticsService:
                         dr_type = filters["date_range"].get("type", "")
                         if dr_type == "current_quarter":
                             q_start = pd.Timestamp(now.year, (now.quarter - 1) * 3 + 1, 1)
-                            df = df[df['parsed_date'] >= q_start]
+                            q_end = q_start + pd.DateOffset(months=3)
+                            df = df[(df['parsed_date'] >= q_start) & (df['parsed_date'] < q_end)]
                         elif dr_type == "current_month":
                             m_start = pd.Timestamp(now.year, now.month, 1)
-                            df = df[df['parsed_date'] >= m_start]
+                            m_end = m_start + pd.DateOffset(months=1)
+                            df = df[(df['parsed_date'] >= m_start) & (df['parsed_date'] < m_end)]
+                        elif dr_type == "last_quarter":
+                            q_current_start = pd.Timestamp(now.year, (now.quarter - 1) * 3 + 1, 1)
+                            q_last_start = q_current_start - pd.DateOffset(months=3)
+                            df = df[(df['parsed_date'] >= q_last_start) & (df['parsed_date'] < q_current_start)]
+                        elif dr_type == "upcoming":
+                            today_start = pd.Timestamp(now.year, now.month, now.day)
+                            upcoming_end = today_start + pd.DateOffset(days=90)
+                            df = df[(df['parsed_date'] >= today_start) & (df['parsed_date'] < upcoming_end)]
                     except Exception:
                         pass # Fail open if dates are unparseable
 
@@ -83,6 +93,7 @@ class AnalyticsService:
                 "paused_or_stuck": 0,
                 "not_started": 0,
                 "pending_client_details": 0,
+                "executed_until_current_month": 0,
                 "active_or_incomplete_projects": 0
             }
             
@@ -112,24 +123,34 @@ class AnalyticsService:
                     dr_type = filters["date_range"].get("type", "")
                     if dr_type == "current_quarter":
                         q_start = pd.Timestamp(now.year, (now.quarter - 1) * 3 + 1, 1)
-                        df = df[df['parsed_date'] >= q_start]
+                        q_end = q_start + pd.DateOffset(months=3)
+                        df = df[(df['parsed_date'] >= q_start) & (df['parsed_date'] < q_end)]
                     elif dr_type == "current_month":
                         m_start = pd.Timestamp(now.year, now.month, 1)
-                        df = df[df['parsed_date'] >= m_start]
+                        m_end = m_start + pd.DateOffset(months=1)
+                        df = df[(df['parsed_date'] >= m_start) & (df['parsed_date'] < m_end)]
+                    elif dr_type == "last_quarter":
+                        q_current_start = pd.Timestamp(now.year, (now.quarter - 1) * 3 + 1, 1)
+                        q_last_start = q_current_start - pd.DateOffset(months=3)
+                        df = df[(df['parsed_date'] >= q_last_start) & (df['parsed_date'] < q_current_start)]
+                    elif dr_type == "upcoming":
+                        today_start = pd.Timestamp(now.year, now.month, now.day)
+                        upcoming_end = today_start + pd.DateOffset(days=90)
+                        df = df[(df['parsed_date'] >= today_start) & (df['parsed_date'] < upcoming_end)]
                 except Exception:
                     pass
 
         # Granular Work Order Status Semantics
-        # We look for exact word matches or substrings that semantically match the user's intent
         ongoing = df[df['status_norm'] == 'ongoing']
-        completed = df[df['status_norm'].isin(['completed', 'executed'])]
-        partially_completed = df[df['status_norm'] == 'partially completed']
-        paused_or_stuck = df[df['status_norm'].isin(['pause', 'stuck'])]
+        completed = df[df['status_norm'] == 'completed']
+        partially_completed = df[df['status_norm'] == 'partial completed']
+        paused_or_stuck = df[df['status_norm'] == 'pause / struck']
         not_started = df[df['status_norm'] == 'not started']
-        pending_client_details = df[df['status_norm'] == 'pending client details']
+        pending_client_details = df[df['status_norm'] == 'details pending from client']
+        executed_until_current_month = df[df['status_norm'] == 'executed until current month']
 
         # Broad aggregate for anything that is actively being worked on or waiting to be finished
-        active_or_incomplete = df[~df['status_norm'].isin(['completed', 'executed', 'unknown'])]
+        active_or_incomplete = df[~df['status_norm'].isin(['completed', 'unknown'])]
         
         return {
             "total_work_orders": len(df),
@@ -139,6 +160,7 @@ class AnalyticsService:
             "paused_or_stuck": len(paused_or_stuck),
             "not_started": len(not_started),
             "pending_client_details": len(pending_client_details),
+            "executed_until_current_month": len(executed_until_current_month),
             "active_or_incomplete_projects": len(active_or_incomplete),
             "status_distribution": df['status_norm'].value_counts().to_dict() if 'status_norm' in df.columns else {}
         }
